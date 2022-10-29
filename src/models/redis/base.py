@@ -23,7 +23,7 @@ class RedisKeySchema(BaseKeySchema):
 
 class RedisBaseModel(BaseModel):
     pk: uuid.UUID = Field(default_factory=uuid.uuid4)
-    _key_schema: BaseKeySchema | None = None
+    _key_schema: RedisKeySchema | None = None
     _database: aioredis.Redis = get_db()
 
     @classmethod
