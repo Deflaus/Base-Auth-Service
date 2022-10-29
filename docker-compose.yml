@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:13.4
+    restart: on-failure
+    environment:
+      POSTGRES_USER: auth-service
+      POSTGRES_PASSWORD: auth-service
+      POSTGRES_DB: auth-service
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: pg_isready -U auth-service -d auth-service
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  redis:
+    image: redislabs/rejson:2.0.11
+    restart: on-failure
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: redis-cli ping
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
