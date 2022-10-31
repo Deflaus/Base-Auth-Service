@@ -1,16 +1,11 @@
 import uuid
-from typing import Any
 
 import aioredis
-import orjson
 from pydantic import BaseModel, Field
 
 from core.key_schema import BaseKeySchema
 from db.redis import get_db
-
-
-def orjson_dumps(v: Any, *, default: Any) -> str:
-    return orjson.dumps(v, default=default).decode()
+from utils.json import OrjsonConfig
 
 
 class NotFoundError(Exception):
@@ -53,9 +48,8 @@ class RedisBaseModel(BaseModel):
 
 
 class RedisJsonModel(RedisBaseModel):
-    class Config:
-        json_loads = orjson.loads
-        json_dumps = orjson_dumps
+    class Config(OrjsonConfig):
+        pass
 
     @classmethod
     async def delete(cls, pk: uuid.UUID) -> int:
