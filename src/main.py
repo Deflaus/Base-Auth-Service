@@ -16,17 +16,15 @@ app.include_router(api_router)
 
 
 async def save_jwt_key(key: RSAPrivateKey = rsa.generate_private_key(public_exponent=65537, key_size=2048)):
-    settings().PRIVATE_KEY = SecretStr(
+    settings().TOKEN_PRIVATE_KEY = SecretStr(
         key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.BestAvailableEncryption(
-                settings().PRIVATE_KEY_PASSWORD.get_secret_value().encode()
-            ),
+            encryption_algorithm=serialization.NoEncryption(),
         ).decode()
     )
     await JwtPublicKey(
-        pk=settings().PUBLIC_KEY_PK,
+        pk=settings().TOKEN_PUBLIC_KEY_PK,
         public_key=key.public_key().public_bytes(
             encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo
         ),

@@ -4,7 +4,7 @@ import aioredis
 from pydantic import BaseModel, Field
 
 from core.key_schema import BaseKeySchema
-from db.redis import get_db
+from db.redis import get_redis
 from utils.json import OrjsonConfig
 
 
@@ -19,7 +19,7 @@ class RedisKeySchema(BaseKeySchema):
 class RedisBaseModel(BaseModel):
     pk: uuid.UUID = Field(default_factory=uuid.uuid4)
     _key_schema: RedisKeySchema | None = None
-    _database: aioredis.Redis = get_db()
+    _database: aioredis.Redis = get_redis()
 
     @classmethod
     def db(cls) -> aioredis.Redis:

@@ -1,12 +1,11 @@
-from pydantic import BaseModel
-
-from utils.json import OrjsonConfig
+from schemas.base import BaseSchema
 
 
-class TokenPairSchema(BaseModel):
-    class Config(OrjsonConfig):
-        pass
-
+class TokenPairSchema(BaseSchema):
     access: str
     refresh: str
-    expires_in: int | None
+
+
+class SignInRequestSchema(BaseSchema):
+    username: str
+    password: str
