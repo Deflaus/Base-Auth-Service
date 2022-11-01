@@ -1,6 +1,3 @@
-import logging
-
-import uvicorn
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
@@ -34,7 +31,3 @@ async def save_jwt_key(key: RSAPrivateKey = rsa.generate_private_key(public_expo
 @app.on_event("startup")
 async def startup():
     await save_jwt_key()
-
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, log_level=logging.INFO)

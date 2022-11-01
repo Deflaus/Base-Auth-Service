@@ -1,3 +1,5 @@
+import uuid
+from calendar import timegm
 from datetime import datetime, timedelta
 
 from aioredis import Redis
@@ -7,7 +9,7 @@ from passlib.context import CryptContext
 
 from core.settings import settings
 from db.redis import get_redis
-from schemas.auth import TokenPairSchema
+from schemas.auth import TokenPairSchema, TokenPayload
 
 
 class AuthService:
@@ -22,22 +24,24 @@ class AuthService:
         return cls.pwd_context.verify(raw_password, hashed_password)
 
     @classmethod
-    def create_pair_token(cls, data: dict) -> TokenPairSchema:
+    def create_pair_token(cls, sub: uuid.UUID) -> TokenPairSchema:
         access_token_expire_delta = timedelta(minutes=settings().ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = cls._create_token(data, access_token_expire_delta)
+        access_token = cls._create_token(sub, access_token_expire_delta)
 
         refresh_token_expire_delta = timedelta(days=settings().REFRESH_TOKEN_EXPIRE_DAYS)
-        refresh_token = cls._create_token(data, refresh_token_expire_delta)
+        refresh_token = cls._create_token(sub, refresh_token_expire_delta)
 
         return TokenPairSchema(access=access_token, refresh=refresh_token)
 
     @classmethod
-    def _create_token(cls, data: dict, expires_delta: timedelta) -> str:
-        to_encode = data.copy()
-        expire = datetime.now() + expires_delta
-        to_encode["exp"] = datetime.strftime(expire, "%m/%d/%Y, %H:%M:%S")
+    def _create_token(cls, sub: uuid.UUID, expires_delta: timedelta) -> str:
+        expire = datetime.utcnow() + expires_delta
+        token_payload = TokenPayload(sub=str(sub), exp=timegm(expire.utctimetuple())).dict()
+
         encoded_jwt = jwt.encode(
-            to_encode, settings().TOKEN_PRIVATE_KEY.get_secret_value(), algorithm=cls.jwt_algorithm
+            token_payload,
+            settings().TOKEN_PRIVATE_KEY.get_secret_value(),
+            algorithm=cls.jwt_algorithm,
         )
         return encoded_jwt
 

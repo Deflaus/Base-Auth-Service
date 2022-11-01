@@ -20,5 +20,4 @@ async def sign_in(
     if not auth_service.verify_password(request_data.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")
 
-    data = {"sub": request_data.username}
-    return auth_service.create_pair_token(data)
+    return auth_service.create_pair_token(user.pk)

@@ -1,6 +1,10 @@
+import uuid
+
+
 def get_postgres() -> dict:
     return {
         "johndoe": {
+            "pk": uuid.UUID("79825d54-0ca7-4324-9543-453729496b95"),
             "username": "johndoe",
             "full_name": "John Doe",
             "email": "johndoe@example.com",

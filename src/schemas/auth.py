@@ -9,3 +9,8 @@ class TokenPairSchema(BaseSchema):
 class SignInRequestSchema(BaseSchema):
     username: str
     password: str
+
+
+class TokenPayload(BaseSchema):
+    sub: str
+    exp: int

@@ -1,3 +1,5 @@
+import uuid
+
 from schemas.base import BaseSchema
 
 
@@ -9,4 +11,5 @@ class User(BaseSchema):
 
 
 class UserInDB(User):
+    pk: uuid.UUID
     hashed_password: str
