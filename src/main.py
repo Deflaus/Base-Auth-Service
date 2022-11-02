@@ -22,9 +22,9 @@ async def save_jwt_key(key: RSAPrivateKey = rsa.generate_private_key(public_expo
     )
     await JwtPublicKey(
         pk=settings().TOKEN_PUBLIC_KEY_PK,
-        public_key=key.public_key().public_bytes(
-            encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo
-        ),
+        public_key=key.public_key()
+        .public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)
+        .decode(),
     ).save()
 
 
