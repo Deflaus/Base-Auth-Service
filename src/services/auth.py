@@ -1,6 +1,7 @@
 import uuid
 from calendar import timegm
 from datetime import datetime, timedelta
+from functools import lru_cache
 
 from fastapi import HTTPException, status
 from jose import JWTError, jwt
@@ -14,19 +15,19 @@ class AuthService:
     jwt_algorithm: str = "RS256"
 
     @classmethod
-    async def create_pair_token(cls, sub: uuid.UUID) -> TokenPairSchema:
+    async def create_pair_token(cls, user_pk: uuid.UUID) -> TokenPairSchema:
         access_token_expire_delta = timedelta(minutes=settings().ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = await cls._create_token(sub, access_token_expire_delta)
+        access_token = await cls._create_token(user_pk, access_token_expire_delta)
 
         refresh_token_expire_delta = timedelta(days=settings().REFRESH_TOKEN_EXPIRE_DAYS)
-        refresh_token = await cls._create_token(sub, refresh_token_expire_delta)
+        refresh_token = await cls._create_token(user_pk, refresh_token_expire_delta)
 
         return TokenPairSchema(access=access_token, refresh=refresh_token)
 
     @classmethod
-    async def _create_token(cls, sub: uuid.UUID, expires_delta: timedelta) -> str:
+    async def _create_token(cls, user_pk: uuid.UUID, expires_delta: timedelta) -> str:
         expire = datetime.utcnow() + expires_delta
-        token_payload = TokenPayload(sub=str(sub), exp=timegm(expire.utctimetuple())).dict()
+        token_payload = TokenPayload(user_pk=str(user_pk), exp=timegm(expire.utctimetuple())).dict()
 
         encoded_jwt = jwt.encode(
             token_payload,
@@ -49,5 +50,6 @@ class AuthService:
         return TokenPayload.parse_obj(payload)
 
 
+@lru_cache
 def get_auth_service() -> AuthService:
     return AuthService()

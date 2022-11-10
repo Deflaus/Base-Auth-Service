@@ -1,14 +1,16 @@
-import uuid
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
+from core.settings import settings
+
+engine = create_async_engine(settings().POSTGRES_DSN, echo=False, future=True)
 
 
-def get_postgres() -> dict:
-    return {
-        "79825d54-0ca7-4324-9543-453729496b95": {
-            "pk": uuid.UUID("79825d54-0ca7-4324-9543-453729496b95"),
-            "username": "first_user",
-            "full_name": "First User",
-            "email": "first_user@example.com",
-            "hashed_password": "$2b$12$CeUrZPurx9jv7Ni844dT0uCgVGoV3N75El6K8qaBk1pZCnYfaZ7j2",
-            "is_active": False,
-        }
-    }
+def get_async_session():
+    return sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+
+async def get_postgres() -> AsyncSession:
+    async_session = get_async_session()
+    async with async_session() as session:
+        yield session

@@ -12,5 +12,5 @@ class SignInRequestSchema(BaseSchema):
 
 
 class TokenPayload(BaseSchema):
-    sub: str
+    user_pk: str
     exp: int

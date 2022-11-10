@@ -13,6 +13,19 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
+    POSTGRES_HOST: str = "0.0.0.0"
+    POSTGRES_PORT: int = 5432
+    POSTGRES_USER: str = "auth-service"
+    POSTGRES_PASSWORD: str = "auth-service"
+    POSTGRES_DB: str = "auth-service"
+
+    @property
+    def POSTGRES_DSN(self):
+        return (
+            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@"
+            f"{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
+
 
 @lru_cache()
 def settings() -> Settings:

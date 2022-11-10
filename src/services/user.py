@@ -1,39 +1,40 @@
-from fastapi import Depends
-from passlib.context import CryptContext
+from functools import lru_cache
+from uuid import UUID
+
+from fastapi import Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.postgres import get_postgres
-from schemas.user import UserInDB
+from models.postgres import User
+from schemas.user import UserCreate, UserSchema
 
 
 class UserService:
-    pwd_context: CryptContext = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-    def __init__(self, postgres: dict):
+    def __init__(self, postgres: AsyncSession):
         self.postgres = postgres
 
-    def get_user_by_username(self, username: str) -> UserInDB | None:
-        user = None
-        for pk, data in self.postgres.items():
-            if data["username"] == username:
-                user = data
-                break
-
+    async def validate_credentials(self, username: str, password: str) -> UserSchema:
+        user: User | None = (
+            (await self.postgres.execute(select(User).where(User.username == username))).scalars().first()
+        )
         if user is None:
-            return None
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username")
 
-        return UserInDB(**user)
+        if not user.verify_password(password):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid password")
 
-    def get_user_by_pk(self, pk: str) -> UserInDB | None:
-        user = self.postgres.get(pk, None)
-        if user is None:
-            return None
+        return UserSchema.from_orm(user)
 
-        return UserInDB(**user)
+    async def get_user_by_pk(self, pk: UUID) -> UserSchema | None:
+        user = await User.get(pk=pk, session=self.postgres)
+        return UserSchema.from_orm(user)
 
-    @classmethod
-    def verify_password(cls, raw_password: str, hashed_password: str) -> bool:
-        return cls.pwd_context.verify(raw_password, hashed_password)
+    async def create_user(self, data: UserCreate) -> UserSchema:
+        new_user = await User(**data.dict()).save(self.postgres)
+        return UserSchema.from_orm(new_user)
 
 
-def get_user_service(postgres: dict = Depends(get_postgres)) -> UserService:
+@lru_cache
+def get_user_service(postgres: AsyncSession = Depends(get_postgres)) -> UserService:
     return UserService(postgres)
