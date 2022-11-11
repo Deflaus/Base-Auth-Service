@@ -27,10 +27,10 @@ class BaseModel(BaseClass):  # type: ignore
         return (await session.execute(query)).scalars().all()
 
     @classmethod
-    async def get(cls, pk: UUID, session: AsyncSession) -> "BaseModel":
+    async def get(cls, pk: UUID, session: AsyncSession, raise_not_found: bool = True) -> "BaseModel":
         instance = await session.get(cls, pk)
-        if instance is None:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{cls.verbose_name()} not found")
+        if instance is None and raise_not_found:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{cls.verbose_name()} not found")
 
         return instance
 
@@ -42,9 +42,9 @@ class BaseModel(BaseClass):  # type: ignore
         return self
 
     @classmethod
-    async def delete(cls, pk: UUID, session: AsyncSession) -> int:
+    async def delete(cls, pk: UUID, session: AsyncSession, raise_not_found: bool = True) -> int:
         result = await session.execute(delete(cls).where(cls.pk == pk))
-        if result.rowcount == 0:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{cls.verbose_name()} not found")
+        if result.rowcount == 0 and raise_not_found:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{cls.verbose_name()} not found")
 
         return result.rowcount

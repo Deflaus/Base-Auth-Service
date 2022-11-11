@@ -1,4 +1,5 @@
 import uuid
+from datetime import timedelta
 
 import aioredis
 from pydantic import BaseModel, Field
@@ -64,7 +65,9 @@ class RedisJsonModel(RedisBaseModel):
         obj = cls.parse_raw(data)
         return obj
 
-    async def save(self, pipeline: aioredis.client.Pipeline = None, expire_time: int = 0) -> "RedisJsonModel":
+    async def save(
+        self, pipeline: aioredis.client.Pipeline = None, expire_time: int | timedelta = 0
+    ) -> "RedisJsonModel":
         if pipeline is None:
             conn = self.db()
         else:

@@ -5,11 +5,10 @@ from schemas.base import BaseSchema
 
 class UserBase(BaseSchema):
     username: str
-    password: str
 
 
 class UserCreate(UserBase):
-    pass
+    password: str
 
 
 class UserSchema(UserBase):

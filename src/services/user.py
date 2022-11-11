@@ -26,7 +26,7 @@ class UserService:
 
         return UserSchema.from_orm(user)
 
-    async def get_user_by_pk(self, pk: UUID) -> UserSchema | None:
+    async def get_user_by_pk(self, pk: UUID) -> UserSchema:
         user = await User.get(pk=pk, session=self.postgres)
         return UserSchema.from_orm(user)
 

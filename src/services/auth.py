@@ -7,7 +7,8 @@ from fastapi import HTTPException, status
 from jose import JWTError, jwt
 
 from core.settings import settings
-from models.redis.jwt import JwtPublicKey
+from models.redis.base import NotFoundError
+from models.redis.jwt import JwtPublicKey, RefreshToken
 from schemas.auth import TokenPairSchema, TokenPayload
 
 
@@ -21,6 +22,8 @@ class AuthService:
 
         refresh_token_expire_delta = timedelta(days=settings().REFRESH_TOKEN_EXPIRE_DAYS)
         refresh_token = await cls._create_token(user_pk, refresh_token_expire_delta)
+
+        await RefreshToken(pk=user_pk, token=refresh_token).save(expire_time=refresh_token_expire_delta)
 
         return TokenPairSchema(access=access_token, refresh=refresh_token)
 
@@ -43,11 +46,32 @@ class AuthService:
             payload = jwt.decode(token, jwt_public_key.public_key, algorithms=[cls.jwt_algorithm])
         except JWTError as e:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail=str(e),
             )
 
         return TokenPayload.parse_obj(payload)
+
+    @classmethod
+    async def get_refresh_token_payload(cls, token: str) -> TokenPayload:
+        token_payload = await cls.decode_token(token)
+        try:
+            token_from_cache: RefreshToken = await RefreshToken.get(uuid.UUID(token_payload.user_pk))  # type: ignore
+        except NotFoundError:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Token not found",
+            )
+
+        try:
+            assert token_from_cache.token == token
+        except AssertionError:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid token",
+            )
+
+        return token_payload
 
 
 @lru_cache
