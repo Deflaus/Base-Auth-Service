@@ -73,6 +73,10 @@ class AuthService:
 
         return token_payload
 
+    @classmethod
+    async def remove_refresh_token(cls, user_pk: uuid.UUID) -> None:
+        await RefreshToken.delete(pk=user_pk)
+
 
 @lru_cache
 def get_auth_service() -> AuthService:

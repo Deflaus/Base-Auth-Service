@@ -19,3 +19,8 @@ class UserSchema(UserBase):
 
     class Config:
         orm_mode = True
+
+
+class UserUpdate(BaseSchema):
+    username: str | None
+    full_name: str | None
