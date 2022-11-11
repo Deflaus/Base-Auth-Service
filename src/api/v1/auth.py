@@ -11,7 +11,12 @@ from services.user import UserService, get_user_service
 router = APIRouter()
 
 
-@router.post("/sign_in/", status_code=status.HTTP_201_CREATED, response_model=TokenPairSchema)
+@router.post(
+    "/sign_in/",
+    description="Login by credentials",
+    status_code=status.HTTP_201_CREATED,
+    response_model=TokenPairSchema,
+)
 async def sign_in(
     request_data: SignInRequestSchema,
     auth_service: AuthService = Depends(get_auth_service),
@@ -21,12 +26,22 @@ async def sign_in(
     return await auth_service.create_pair_token(user.pk)
 
 
-@router.get("/validate/", status_code=status.HTTP_200_OK, response_model=TokenPayload)
+@router.get(
+    "/validate/",
+    description="Get token payload",
+    status_code=status.HTTP_200_OK,
+    response_model=TokenPayload,
+)
 async def validate(token_payload: TokenPayload = Depends(get_access_token_payload)):
     return token_payload
 
 
-@router.post("/sign_up/", status_code=status.HTTP_201_CREATED, response_model=UserSchema)
+@router.post(
+    "/sign_up/",
+    description="Create new user",
+    status_code=status.HTTP_201_CREATED,
+    response_model=UserSchema,
+)
 async def sign_up(
     request_data: UserCreate,
     user_service: UserService = Depends(get_user_service),
@@ -34,12 +49,21 @@ async def sign_up(
     return await user_service.create_user(request_data)
 
 
-@router.post("/refresh/", status_code=status.HTTP_201_CREATED, response_model=TokenPairSchema)
+@router.post(
+    "/refresh/",
+    description="Refresh token pair by refresh token in Authorization header",
+    status_code=status.HTTP_201_CREATED,
+    response_model=TokenPairSchema,
+)
 async def refresh_token(token_pair: TokenPairSchema = Depends(get_new_token_pair)) -> TokenPairSchema:
     return token_pair
 
 
-@router.post("/logout/", status_code=status.HTTP_204_NO_CONTENT)
+@router.post(
+    "/logout/",
+    description="Delete refresh token",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def logout(
     token_payload: TokenPayload = Depends(get_access_token_payload),
     auth_service: AuthService = Depends(get_auth_service),
