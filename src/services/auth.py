@@ -17,6 +17,8 @@ class AuthService:
 
     @classmethod
     async def create_pair_token(cls, user_pk: uuid.UUID) -> TokenPairSchema:
+        await cls._check_possibility_to_perform_login_or_refresh_operation(user_pk=user_pk)
+
         access_token_expire_delta = timedelta(minutes=settings().ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = await cls._create_token(user_pk, access_token_expire_delta)
 
@@ -63,9 +65,8 @@ class AuthService:
                 detail="Token not found",
             )
 
-        try:
-            assert token_from_cache.token == token
-        except AssertionError:
+        await cls._check_timeout_refresh_operation(token_from_cache.created_at)
+        if token_from_cache.token != token:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Invalid token",
@@ -73,9 +74,28 @@ class AuthService:
 
         return token_payload
 
-    @classmethod
-    async def remove_refresh_token(cls, user_pk: uuid.UUID) -> None:
+    @staticmethod
+    async def remove_refresh_token(user_pk: uuid.UUID) -> None:
         await RefreshToken.delete(pk=user_pk)
+
+    @classmethod
+    async def _check_possibility_to_perform_login_or_refresh_operation(cls, user_pk: uuid.UUID) -> None:
+        try:
+            refresh_token: RefreshToken = await RefreshToken.get(pk=user_pk)  # type: ignore
+        except NotFoundError:
+            return
+
+        await cls._check_timeout_refresh_operation(refresh_token.created_at)
+
+    @staticmethod
+    async def _check_timeout_refresh_operation(last_refresh_time: int) -> None:
+        if (timegm(datetime.now().utctimetuple()) - last_refresh_time) > 60:
+            return
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You need to wait 60 seconds before the next login or refresh operation",
+        )
 
 
 @lru_cache
