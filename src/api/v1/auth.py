@@ -3,9 +3,10 @@ import uuid
 from fastapi import APIRouter, Depends, status
 
 from api.deps import get_access_token_payload, get_new_token_pair
+from core.backends import UserUsernameModelBackend, get_user_username_backend
 from schemas.auth import SignInRequestSchema, TokenPairSchema, TokenPayload
 from schemas.user import UserCreate, UserSchema
-from services.auth import AuthService, get_auth_service
+from services.auth import TokenService, get_token_service
 from services.user import UserService, get_user_service
 
 router = APIRouter()
@@ -13,16 +14,16 @@ router = APIRouter()
 
 @router.post(
     "/sign_in/",
-    description="Login by credentials",
+    description="Login by username and password",
     status_code=status.HTTP_201_CREATED,
     response_model=TokenPairSchema,
 )
 async def sign_in(
     request_data: SignInRequestSchema,
-    auth_service: AuthService = Depends(get_auth_service),
-    user_service: UserService = Depends(get_user_service),
+    auth_backend: UserUsernameModelBackend = Depends(get_user_username_backend),
+    auth_service: TokenService = Depends(get_token_service),
 ) -> TokenPairSchema:
-    user = await user_service.validate_credentials(request_data.username, request_data.password)
+    user = await auth_backend.authenticate(request_data.username, request_data.password)
     return await auth_service.create_pair_token(user.pk)
 
 
@@ -66,6 +67,6 @@ async def refresh_token(token_pair: TokenPairSchema = Depends(get_new_token_pair
 )
 async def logout(
     token_payload: TokenPayload = Depends(get_access_token_payload),
-    auth_service: AuthService = Depends(get_auth_service),
+    auth_service: TokenService = Depends(get_token_service),
 ) -> None:
     await auth_service.remove_refresh_token(uuid.UUID(token_payload.user_pk))

@@ -12,7 +12,7 @@ from models.redis.jwt import JwtPublicKey, RefreshToken
 from schemas.auth import TokenPairSchema, TokenPayload
 
 
-class AuthService:
+class TokenService:
     jwt_algorithm: str = "RS256"
 
     @classmethod
@@ -99,5 +99,5 @@ class AuthService:
 
 
 @lru_cache
-def get_auth_service() -> AuthService:
-    return AuthService()
+def get_token_service() -> TokenService:
+    return TokenService()

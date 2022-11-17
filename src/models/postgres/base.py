@@ -1,5 +1,3 @@
-import uuid
-
 from fastapi import HTTPException, status
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +11,7 @@ class BaseModel(BaseClass):  # type: ignore
 
     @classmethod
     def verbose_name(cls) -> str:
-        return cls.__tablename__
+        return cls.__tablename__.capitalize()
 
     @classmethod
     async def get_list(cls, offset: int | None, limit: int | None, session: AsyncSession) -> list["BaseModel"]:
@@ -27,8 +25,12 @@ class BaseModel(BaseClass):  # type: ignore
         return (await session.execute(query)).scalars().all()
 
     @classmethod
-    async def get(cls, pk: uuid.UUID, session: AsyncSession, raise_not_found: bool = True) -> "BaseModel":
-        instance = await session.get(cls, pk)
+    async def get(cls, session: AsyncSession, raise_not_found: bool = True, **filter_kwargs) -> "BaseModel":
+        query = select(cls)
+        for arg_name, arg_value in filter_kwargs.items():
+            query = query.where(getattr(cls, arg_name) == arg_value)
+
+        instance = (await session.execute(query)).scalars().first()
         if instance is None and raise_not_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{cls.verbose_name()} not found")
 
@@ -41,7 +43,7 @@ class BaseModel(BaseClass):  # type: ignore
 
         return self
 
-    async def update(self, pk: uuid.UUID, values_to_update: dict, session: AsyncSession) -> "BaseModel":
+    async def update(self, values_to_update: dict, session: AsyncSession) -> "BaseModel":
         new_values: dict = {}
         for field, value in values_to_update.items():
             try:
@@ -60,14 +62,18 @@ class BaseModel(BaseClass):  # type: ignore
         if not new_values:
             return self
 
-        query = update(self.__class__).values(new_values).where(self.__class__.pk == pk)
-        await session.execute(query)
+        await session.execute(update(self.__class__).values(new_values).where(self.__class__.pk == self.pk))
         await session.commit()
+        await session.refresh(self)
         return self
 
     @classmethod
-    async def delete(cls, pk: uuid.UUID, session: AsyncSession, raise_not_found: bool = True) -> int:
-        result = await session.execute(delete(cls).where(cls.pk == pk))
+    async def delete(cls, session: AsyncSession, raise_not_found: bool = True, **filter_kwargs) -> int:
+        query = delete(cls)
+        for arg_name, arg_value in filter_kwargs.items():
+            query = query.where(getattr(cls, arg_name) == arg_value)
+
+        result = await session.execute(query)
         if result.rowcount == 0 and raise_not_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{cls.verbose_name()} not found")
 
