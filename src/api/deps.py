@@ -24,7 +24,7 @@ async def get_current_user(
     auth_service: TokenService = Depends(get_token_service),
 ) -> UserSchema:
     token_payload = await auth_service.decode_token(token)
-    user = await user_service.get_user_by_pk(pk=uuid.UUID(token_payload.user_pk))
+    user = await user_service.get_user_by_pk(pk=uuid.UUID(token_payload.sub))
 
     return user
 
@@ -35,6 +35,6 @@ async def get_new_token_pair(
     user_service: UserService = Depends(get_user_service),
 ) -> TokenPairSchema:
     token_payload = await auth_service.get_refresh_token_payload(token)
-    user = await user_service.get_user_by_pk(pk=uuid.UUID(token_payload.user_pk))
+    user = await user_service.get_user_by_pk(pk=uuid.UUID(token_payload.sub))
 
-    return await auth_service.create_pair_token(user.pk)
+    return await auth_service.create_pair_token(user)

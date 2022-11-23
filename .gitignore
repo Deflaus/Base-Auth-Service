@@ -1,3 +1,5 @@
 .idea
+.vscode
 .python-version
 src/.mypy_cache
+__pycache__

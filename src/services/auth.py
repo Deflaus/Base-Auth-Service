@@ -10,29 +10,30 @@ from core.settings import settings
 from models.redis.base import NotFoundError
 from models.redis.jwt import JwtPublicKey, RefreshToken
 from schemas.auth import TokenPairSchema, TokenPayload
+from schemas.user import UserSchema
 
 
 class TokenService:
     jwt_algorithm: str = "RS256"
 
     @classmethod
-    async def create_pair_token(cls, user_pk: uuid.UUID) -> TokenPairSchema:
-        await cls._check_possibility_to_perform_login_or_refresh_operation(user_pk=user_pk)
+    async def create_pair_token(cls, user: UserSchema) -> TokenPairSchema:
+        await cls._check_possibility_to_perform_login_or_refresh_operation(user_pk=user.pk)
 
         access_token_expire_delta = timedelta(minutes=settings().ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = await cls._create_token(user_pk, access_token_expire_delta)
+        access_token = await cls._create_token(user, access_token_expire_delta)
 
         refresh_token_expire_delta = timedelta(days=settings().REFRESH_TOKEN_EXPIRE_DAYS)
-        refresh_token = await cls._create_token(user_pk, refresh_token_expire_delta)
+        refresh_token = await cls._create_token(user, refresh_token_expire_delta)
 
-        await RefreshToken(pk=user_pk, token=refresh_token).save(expire_time=refresh_token_expire_delta)
+        await RefreshToken(pk=user.pk, token=refresh_token).save(expire_time=refresh_token_expire_delta)
 
         return TokenPairSchema(access=access_token, refresh=refresh_token)
 
     @classmethod
-    async def _create_token(cls, user_pk: uuid.UUID, expires_delta: timedelta) -> str:
+    async def _create_token(cls, user: UserSchema, expires_delta: timedelta) -> str:
         expire = datetime.utcnow() + expires_delta
-        token_payload = TokenPayload(user_pk=str(user_pk), exp=timegm(expire.utctimetuple())).dict()
+        token_payload = TokenPayload(sub=str(user.pk), role=user.role, exp=timegm(expire.utctimetuple())).dict()
 
         encoded_jwt = jwt.encode(
             token_payload,
@@ -58,7 +59,7 @@ class TokenService:
     async def get_refresh_token_payload(cls, token: str) -> TokenPayload:
         token_payload = await cls.decode_token(token)
         try:
-            token_from_cache: RefreshToken = await RefreshToken.get(uuid.UUID(token_payload.user_pk))  # type: ignore
+            token_from_cache: RefreshToken = await RefreshToken.get(uuid.UUID(token_payload.sub))  # type: ignore
         except NotFoundError:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

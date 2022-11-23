@@ -1,6 +1,13 @@
 import uuid
+from enum import Enum
 
 from schemas.base import BaseSchema
+
+
+class UserRolesEnum(str, Enum):
+    staff = "staff"
+    admin = "admin"
+    super_admin = "super_admin"
 
 
 class UserBase(BaseSchema):
@@ -13,6 +20,7 @@ class UserCreate(UserBase):
 
 class UserSchema(UserBase):
     pk: uuid.UUID
+    role: UserRolesEnum
     email: str | None
     full_name: str | None
     is_active: bool

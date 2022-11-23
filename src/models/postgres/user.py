@@ -1,8 +1,9 @@
 from passlib.context import CryptContext
-from sqlalchemy import Boolean, Column, String, Text
+from sqlalchemy import Boolean, Column, Enum, String, Text
 from sqlalchemy.orm import validates
 
 from models.postgres.mixins import CreatedAtUpdatedAtMixin, UUIDMixin
+from schemas.user import UserRolesEnum
 
 
 class PasswordService:
@@ -22,6 +23,7 @@ class User(UUIDMixin, CreatedAtUpdatedAtMixin):
 
     username: str = Column(String(length=100), nullable=False, unique=True)
     password: str = Column(Text, nullable=False)
+    role: str = Column(Enum(UserRolesEnum), default=UserRolesEnum.staff, nullable=False)
     full_name: str = Column(String(length=100), default=None, nullable=True)
     email: str = Column(String(length=100), default=None, nullable=True, unique=True)
     is_active: bool = Column(Boolean, default=False, nullable=False)
@@ -30,5 +32,5 @@ class User(UUIDMixin, CreatedAtUpdatedAtMixin):
         return PasswordService.verify_password(raw_password, self.password)
 
     @validates("password")
-    def validate_password(self, key, password):
+    def validate_password(self, key, password) -> str:
         return PasswordService.get_hashed_password(password)

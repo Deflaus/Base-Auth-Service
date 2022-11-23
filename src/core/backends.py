@@ -8,7 +8,7 @@ from models.postgres import User
 from schemas.user import UserSchema
 
 
-class UserUsernameModelBackend:
+class UsernameAuthBackend:
     def __init__(self, postgres: AsyncSession):
         self.postgres = postgres
 
@@ -24,5 +24,5 @@ class UserUsernameModelBackend:
 
 
 @lru_cache
-def get_user_username_backend(postgres: AsyncSession = Depends(get_postgres)) -> UserUsernameModelBackend:
-    return UserUsernameModelBackend(postgres)
+def get_username_auth_backend(postgres: AsyncSession = Depends(get_postgres)) -> UsernameAuthBackend:
+    return UsernameAuthBackend(postgres)

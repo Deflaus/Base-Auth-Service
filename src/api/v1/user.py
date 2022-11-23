@@ -8,19 +8,19 @@ router = APIRouter()
 
 
 @router.get(
-    "/",
+    "",
     description="Get current user data",
     status_code=status.HTTP_200_OK,
     response_model=UserSchema,
 )
 async def get_user(
     user: UserSchema = Depends(get_current_user),
-):
+) -> UserSchema:
     return user
 
 
 @router.patch(
-    "/",
+    "",
     description="Update current user data",
     status_code=status.HTTP_200_OK,
     response_model=UserSchema,
@@ -34,7 +34,7 @@ async def update_user(
 
 
 @router.delete(
-    "/",
+    "",
     description="Delete current user",
     status_code=status.HTTP_204_NO_CONTENT,
     response_model=None,

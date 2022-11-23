@@ -1,4 +1,5 @@
 from schemas.base import BaseSchema
+from schemas.user import UserRolesEnum
 
 
 class TokenPairSchema(BaseSchema):
@@ -6,11 +7,12 @@ class TokenPairSchema(BaseSchema):
     refresh: str
 
 
-class SignInRequestSchema(BaseSchema):
+class SignInSchema(BaseSchema):
     username: str
     password: str
 
 
 class TokenPayload(BaseSchema):
-    user_pk: str
+    sub: str
+    role: UserRolesEnum
     exp: int
