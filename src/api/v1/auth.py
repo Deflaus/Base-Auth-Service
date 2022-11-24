@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, status
 
-from api.deps import get_access_token_payload, get_new_token_pair
+from api.deps import get_new_token_pair, get_token_payload
 from core.backends import UsernameAuthBackend, get_username_auth_backend
 from schemas.auth import SignInSchema, TokenPairSchema, TokenPayload
 from schemas.user import UserCreate, UserSchema
@@ -33,7 +33,7 @@ async def sign_in(
     status_code=status.HTTP_200_OK,
     response_model=TokenPayload,
 )
-async def validate(token_payload: TokenPayload = Depends(get_access_token_payload)):
+async def validate(token_payload: TokenPayload = Depends(get_token_payload)):
     return token_payload
 
 
@@ -66,7 +66,7 @@ async def refresh_token(token_pair: TokenPairSchema = Depends(get_new_token_pair
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def logout(
-    token_payload: TokenPayload = Depends(get_access_token_payload),
+    token_payload: TokenPayload = Depends(get_token_payload),
     auth_service: TokenService = Depends(get_token_service),
 ) -> None:
     await auth_service.remove_refresh_token(uuid.UUID(token_payload.sub))
