@@ -1,7 +1,7 @@
 import uuid
 from enum import Enum
 
-from schemas.base import BaseSchema
+from pydantic import BaseModel
 
 
 class UserRolesEnum(str, Enum):
@@ -10,8 +10,11 @@ class UserRolesEnum(str, Enum):
     super_admin = "super_admin"
 
 
-class UserBase(BaseSchema):
+class UserBase(BaseModel):
     username: str
+
+    class Config:
+        orm_mode = True
 
 
 class UserCreate(UserBase):
@@ -25,10 +28,7 @@ class UserSchema(UserBase):
     full_name: str | None
     is_active: bool
 
-    class Config:
-        orm_mode = True
 
-
-class UserUpdate(BaseSchema):
+class UserUpdate(UserBase):
     username: str | None
     full_name: str | None

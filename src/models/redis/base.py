@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field
 
 from core.key_schema import BaseKeySchema
 from db.redis import get_redis
-from utils.json import OrjsonConfig
 
 
 class NotFoundError(Exception):
@@ -49,8 +48,6 @@ class RedisBaseModel(BaseModel):
 
 
 class RedisJsonModel(RedisBaseModel):
-    class Config(OrjsonConfig):
-        pass
 
     @classmethod
     async def delete(cls, pk: uuid.UUID) -> int:

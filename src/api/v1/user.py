@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
-from api.deps import get_current_user
+from api.deps import get_current_user_by_access_token
 from schemas.user import UserSchema, UserUpdate
 from services.user import UserService, get_user_service
 
@@ -14,7 +14,7 @@ router = APIRouter()
     response_model=UserSchema,
 )
 async def get_user(
-    user: UserSchema = Depends(get_current_user),
+    user: UserSchema = Depends(get_current_user_by_access_token),
 ) -> UserSchema:
     return user
 
@@ -27,7 +27,7 @@ async def get_user(
 )
 async def update_user(
     request_data: UserUpdate,
-    user: UserSchema = Depends(get_current_user),
+    user: UserSchema = Depends(get_current_user_by_access_token),
     user_service: UserService = Depends(get_user_service),
 ) -> UserSchema:
     return await user_service.update_user(pk=user.pk, data=request_data)
@@ -40,7 +40,7 @@ async def update_user(
     response_model=None,
 )
 async def delete_user(
-    user: UserSchema = Depends(get_current_user),
+    user: UserSchema = Depends(get_current_user_by_access_token),
     user_service: UserService = Depends(get_user_service),
 ) -> None:
     return await user_service.delete_user(pk=user.pk)

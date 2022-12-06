@@ -1,18 +1,15 @@
-from schemas.base import BaseSchema
+from pydantic import BaseModel
 from schemas.user import UserRolesEnum
 
 
-class TokenPairSchema(BaseSchema):
-    access: str
-    refresh: str
-
-
-class SignInSchema(BaseSchema):
-    username: str
-    password: str
-
-
-class TokenPayload(BaseSchema):
+class BaseTokenPayload(BaseModel):
     sub: str
-    role: UserRolesEnum
     exp: int
+
+
+class AccessTokenPayload(BaseTokenPayload):
+    role: UserRolesEnum
+
+
+class RefreshTokenPayload(BaseTokenPayload):
+    pass
