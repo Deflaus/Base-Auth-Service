@@ -2,27 +2,46 @@
 name = "base-auth-service"
 version = "0.1.0"
 description = ""
-authors = ["daniil <snow41521@gmail.com>"]
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "base_auth_service"}]
 
 [tool.poetry.dependencies]
-python = "^3.10"
-fastapi = "^0.85.1"
-uvicorn = "^0.19.0"
-aioredis = "2.0.0"
-pydantic = "^1.10.2"
-orjson = "^3.8.1"
+python = "^3.11"
+fastapi = "^0.101.1"
+sqlalchemy = {extras = ["mypy"], version = "^2.0.20"}
+alembic = "^1.11.3"
 python-jose = "^3.3.0"
+redis = "^5.0.0"
+uvicorn = "^0.23.2"
+pydantic = "^2.2.0"
+asyncpg = "^0.28.0"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
-SQLAlchemy = "^1.4.43"
-asyncpg = "^0.27.0"
-alembic = "^1.8.1"
-python-multipart = "^0.0.5"
+loguru = "^0.7.0"
+pydantic-settings = "^2.0.3"
+cryptography = "^41.0.3"
+greenlet = "^2.0.2"
 
-[tool.poetry.dev-dependencies]
-black = "^22.10.0"
-flake8 = "^5.0.4"
-isort = "^5.10.1"
-mypy = "^0.982"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.7.0"
+ruff = "^0.0.285"
+isort = "^5.12.0"
+mypy = "^1.5.1"
+types-redis = "^4.6.0.5"
+types-passlib = "^1.7.7.13"
+types-python-jose = "^3.3.4.8"
+pytest = "^7.4.2"
+pytest-factoryboy = "^2.5.1"
+pytest-asyncio = "^0.21.1"
+httpx = "^0.25.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 120
 
 [tool.black]
 line-length = 120
@@ -31,9 +50,5 @@ line-length = 120
 profile = "black"
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 ignore_missing_imports = true
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"

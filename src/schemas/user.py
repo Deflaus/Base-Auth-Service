@@ -1,34 +1,26 @@
-import uuid
-from enum import Enum
+import uuid as _uuid
 
-from pydantic import BaseModel
-
-
-class UserRolesEnum(str, Enum):
-    staff = "staff"
-    admin = "admin"
-    super_admin = "super_admin"
+from enums import UserRolesEnum
+from schemas.base import BaseOrmSchema
 
 
-class UserBase(BaseModel):
+class _UserBaseSchema(BaseOrmSchema):
     username: str
-
-    class Config:
-        orm_mode = True
-
-
-class UserCreate(UserBase):
-    password: str
-
-
-class UserSchema(UserBase):
-    pk: uuid.UUID
+    full_name: str | None = None
+    email: str | None = None
     role: UserRolesEnum
-    email: str | None
-    full_name: str | None
     is_active: bool
 
 
-class UserUpdate(UserBase):
-    username: str | None
-    full_name: str | None
+class UserOutputSchema(_UserBaseSchema):
+    uuid: _uuid.UUID
+
+
+class UserCreateSchema(_UserBaseSchema):
+    password: str
+
+
+class UserChangeSchema(BaseOrmSchema):
+    username: str | None = None
+    full_name: str | None = None
+    email: str | None = None

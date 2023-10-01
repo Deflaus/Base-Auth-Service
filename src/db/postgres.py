@@ -1,16 +1,27 @@
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+import functools
+import typing
 
-from core.settings import settings
+from sqlalchemy import URL
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
-engine = create_async_engine(settings().POSTGRES_DSN, echo=False, future=True)
+from settings import get_settings
 
 
-def get_async_session():
-    return sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+@functools.lru_cache
+def get_engine(url: str | URL | None = None, **kwargs) -> AsyncEngine:
+    return create_async_engine(url or get_settings().postgres_dsn, echo=False, future=True, **kwargs)
 
 
-async def get_postgres() -> AsyncSession:
+def get_async_session(url: str | URL | None = None) -> async_sessionmaker[AsyncSession]:
+    return async_sessionmaker(get_engine(url or get_settings().postgres_dsn), expire_on_commit=False)
+
+
+async def get_session() -> typing.AsyncGenerator[AsyncSession, None]:
     async_session = get_async_session()
     async with async_session() as session:
         yield session

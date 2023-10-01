@@ -1,8 +1,8 @@
-version: "3.8"
+version: '3.3'
 
 services:
   db:
-    image: postgres:13.4
+    image: postgres:15.2
     restart: on-failure
     environment:
       POSTGRES_USER: auth-service
@@ -19,7 +19,7 @@ services:
       retries: 3
 
   redis:
-    image: redislabs/rejson:2.0.11
+    image: redis/redis-stack:7.2.0-RC1
     restart: on-failure
     ports:
       - "6379:6379"
